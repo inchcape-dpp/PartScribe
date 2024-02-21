@@ -3,7 +3,7 @@
 import sys
 import os
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QDialog, QApplication, QMainWindow, QFileDialog
+from PyQt6.QtWidgets import QDialog, QApplication, QMainWindow, QFileDialog, QTableWidgetItem
 from PyQt6.QtGui import QImage, QPixmap, QImageReader
 from PyQt6.uic import loadUi
 from PyQt6.QtSql import QSqlDatabase
@@ -29,13 +29,11 @@ class Rename(QMainWindow):
 
         self.ui.btnOutputDir.clicked.connect(self.OutputDir)
 
-    def add_item(self):
-        try:
-            row_position = self.ui.tblRename.rowCount()
-            self.ui.tblRename.insertRow(row_position)
+        self.ui.btnCopyRename.clicked.connect(self.CopyandRename)
 
-        except Exception as exception:
-            traceback.print_exc()
+    def add_item(self):
+        row_position = self.ui.tblRename.rowCount()
+        self.ui.tblRename.insertRow(row_position)
 
     def InputDir(self):
         infiledir = QFileDialog.getExistingDirectory(self, 'Select input directory', '/home')
@@ -44,6 +42,41 @@ class Rename(QMainWindow):
     def OutputDir(self):
         outfiledir = QFileDialog.getExistingDirectory(self, 'Select input directory', '/home')
         self.ui.lblOutputDir.setText(f'{outfiledir}')
+
+    def CopyandRename(self):
+        src = self.ui.lblInputDir.text()
+        dest = self.ui.lblOutputDir.text()
+
+        try:
+            if src and dest:
+                for row in range(self.ui.tblRename.rowCount()):
+                    old_name = self.ui.tblRename.item(row, 0).text()
+                    
+                    brand_prefix = self.ui.tblRename.item(row, 3).text()[:3].upper()
+                    
+                    prodid = self.ui.tblRename.item(row, 2).text().upper()
+                    
+                    imgno = self.ui.tblRename.item(row, 1).text().upper()
+                    
+                    suffix = 'masterProductCatalog'
+
+                    filetype = os.path.splitext(old_name)[1]
+
+                    new_name = f'{brand_prefix}{prodid}-{imgno}-{suffix}{filetype}'
+
+                    self.ui.tblRename.setItem(row, 4, QTableWidgetItem(new_name))
+
+            if new_name:
+                old_path = os.path.join(src, old_name)
+                new_path = os.path.join(dest, new_name)
+
+                try:
+                    copyfile(old_path, new_path)
+                except Exception as e:
+                    print(f'Error: {e}')     
+
+        except Exception as exception:
+            traceback.print_exc()
 
 class Login(QDialog):
     def __init__(self):
